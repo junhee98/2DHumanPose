@@ -97,11 +97,11 @@ MODEL:
   INIT_WEIGHTS: True
   NAME: pose_higher_hrnet
   NUM_JOINTS: 17
-  PRETRAINED: 'models/pytorch/imagenet/hrnet_w32-36af842e.pth'
+  PRETRAINED: 'models/pytorch/pose_coco/model_best.pth.tar'
   TAG_PER_JOINT: True
 TEST:
   FLIP_TEST: True
-  IMAGES_PER_GPU: 1
+  IMAGES_PER_GPU: 256
   MODEL_FILE: '' 
   SCALE_FACTOR: [1]
   DETECTION_THRESHOLD: 0.1
@@ -113,17 +113,17 @@ TEST:
 TRAIN:
   BEGIN_EPOCH: 0
   CHECKPOINT: ''
-  END_EPOCH: 300
+  END_EPOCH: 100
   GAMMA1: 0.99
   GAMMA2: 0.0
   IMAGES_PER_GPU: 12
   LR: 0.001
   LR_FACTOR: 0.1
-  LR_STEP: [200, 260]
+  LR_STEP: [200,260]
   MOMENTUM: 0.9
   NESTEROV: False
   OPTIMIZER: adam
   RESUME: False
   SHUFFLE: True
   WD: 0.0001
-WORKERS: 4
+WORKERS: 2

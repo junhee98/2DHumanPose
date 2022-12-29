@@ -18,6 +18,7 @@ import logging
 
 import torch
 import torch.nn as nn
+from models.davit_module import DaViT
 
 
 BN_MOMENTUM = 0.1
@@ -256,6 +257,9 @@ class PoseHigherResolutionNet(nn.Module):
         extra = cfg.MODEL.EXTRA
         super(PoseHigherResolutionNet, self).__init__()
 
+        #DaViT net
+        self.davit = DaViT(img_size=512)
+
         # stem net
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=2, padding=1,
                                bias=False)
@@ -297,6 +301,23 @@ class PoseHigherResolutionNet(nn.Module):
             pre_stage_channels, num_channels)
         self.stage4, pre_stage_channels = self._make_stage(
             self.stage4_cfg, num_channels, multi_scale_output=False)
+        
+        #concat DaViT & Higher-HRNet
+        self.conv_128 = nn.Conv2d(64+64, 64, kernel_size=3, stride=1, padding=1,
+                               bias=False)
+        self.bn1_128 = nn.BatchNorm2d(64, momentum=BN_MOMENTUM)
+
+        self.conv_64 = nn.Conv2d(64+128, 64, kernel_size=3, stride=1, padding=1,
+                               bias=False)
+        self.bn1_64 = nn.BatchNorm2d(64, momentum=BN_MOMENTUM)
+
+        self.conv_32 = nn.Conv2d(128+192, 128, kernel_size=3, stride=1, padding=1,
+                               bias=False)
+        self.bn1_32 = nn.BatchNorm2d(128, momentum=BN_MOMENTUM)
+
+        self.conv_16 = nn.Conv2d(256+256, 256, kernel_size=3, stride=1, padding=1,
+                               bias=False)
+        self.bn1_16 = nn.BatchNorm2d(256, momentum=BN_MOMENTUM)
 
         self.final_layers = self._make_final_layers(cfg, pre_stage_channels[0])
         self.deconv_layers = self._make_deconv_layers(
@@ -472,12 +493,16 @@ class PoseHigherResolutionNet(nn.Module):
         return nn.Sequential(*modules), num_inchannels
 
     def forward(self, x):
+        davit_x = self.davit(x)
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
         x = self.conv2(x)
         x = self.bn2(x)
         x = self.relu(x)
+        x = torch.cat((x,davit_x[0]),1)
+        x = self.conv_128(x)
+        x = self.bn1_128(x)
         x = self.layer1(x)
 
         x_list = []
@@ -486,6 +511,9 @@ class PoseHigherResolutionNet(nn.Module):
                 x_list.append(self.transition1[i](x))
             else:
                 x_list.append(x)
+        x_list[-1] = torch.cat((x_list[-1],davit_x[1]),1)
+        x_list[-1] = self.conv_64(x_list[-1])
+        x_list[-1] = self.bn1_64(x_list[-1])
         y_list = self.stage2(x_list)
 
         x_list = []
@@ -494,6 +522,9 @@ class PoseHigherResolutionNet(nn.Module):
                 x_list.append(self.transition2[i](y_list[-1]))
             else:
                 x_list.append(y_list[i])
+        x_list[-1] = torch.cat((x_list[-1],davit_x[2]),1)
+        x_list[-1] = self.conv_32(x_list[-1])
+        x_list[-1] = self.bn1_32(x_list[-1])
         y_list = self.stage3(x_list)
 
         x_list = []
@@ -502,7 +533,11 @@ class PoseHigherResolutionNet(nn.Module):
                 x_list.append(self.transition3[i](y_list[-1]))
             else:
                 x_list.append(y_list[i])
+        x_list[-1] = torch.cat((x_list[-1],davit_x[3]),1)
+        x_list[-1] = self.conv_16(x_list[-1])
+        x_list[-1] = self.bn1_16(x_list[-1])
         y_list = self.stage4(x_list)
+
 
         final_outputs = []
         x = y_list[0]
@@ -563,7 +598,8 @@ class PoseHigherResolutionNet(nn.Module):
 
 def get_pose_net(cfg, is_train, **kwargs):
     model = PoseHigherResolutionNet(cfg, **kwargs)
-
+    with open('model_summary.txt','w') as f:
+        f.write(str(model))
     if is_train and cfg.MODEL.INIT_WEIGHTS:
         model.init_weights(cfg.MODEL.PRETRAINED, verbose=cfg.VERBOSE)
 
