@@ -74,15 +74,13 @@ The code is developed using python 3.8 on Ubuntu. NVIDIA GPUs are needed. The co
    └── requirements.txt
    ```
 
-7. Download pretrained models from our model zoo([GoogleDrive](https://drive.google.com/open?id=1bdXVmYrSynPLSk5lptvgyQ8fhziobD50) or [OneDrive](https://1drv.ms/f/s!AhIXJn_J-blW4AwKRMklXVzndJT0))
+7. Download pretrained models from our model zoo([GoogleDrive](https://drive.google.com/drive/folders/1MTZMFmaX1vPM8WShD6lPzrdghvcl1FAi?usp=sharing)
    ```
    ${POSE_ROOT}
     `-- models
         `-- pytorch
-            |-- imagenet
-            |   `-- hrnet_w32-36af842e.pth
             `-- pose_coco
-                `-- pose_higher_hrnet_w32_512.pth
+                `-- model_best.pth.tar
 
    ```
    
@@ -112,7 +110,7 @@ ${POSE_ROOT}
 
 ### Training and Testing
 
-#### Testing on COCO val2017 dataset using model zoo's models ([GoogleDrive](https://drive.google.com/drive/folders/1X9-TzWpwbX2zQf2To8lB-ZQHMYviYYh6?usp=sharing))
+#### Testing on COCO val2017 dataset using pretrained models ([GoogleDrive](https://drive.google.com/drive/folders/1MTZMFmaX1vPM8WShD6lPzrdghvcl1FAi?usp=sharing))
  
 
 For single-scale testing:
@@ -120,7 +118,7 @@ For single-scale testing:
 ```
 python tools/valid.py \
     --cfg experiments/coco/higher_hrnet/w32_512_adam_lr1e-3.yaml \
-    TEST.MODEL_FILE models/pytorch/pose_coco/pose_higher_hrnet_w32_512.pth
+    TEST.MODEL_FILE models/pytorch/pose_coco/model_best.pth.tar
 ```
 
 By default, we use horizontal flip. To test without flip:
@@ -128,7 +126,7 @@ By default, we use horizontal flip. To test without flip:
 ```
 python tools/valid.py \
     --cfg experiments/coco/higher_hrnet/w32_512_adam_lr1e-3.yaml \
-    TEST.MODEL_FILE models/pytorch/pose_coco/pose_higher_hrnet_w32_512.pth \
+    TEST.MODEL_FILE models/pytorch/pose_coco/model_best.pth.tar \
     TEST.FLIP_TEST False
 ```
 
