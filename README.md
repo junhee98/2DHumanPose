@@ -74,7 +74,7 @@ The code is developed using python 3.8 on Ubuntu. NVIDIA GPUs are needed. The co
    └── requirements.txt
    ```
 
-7. Download pretrained models from our model zoo([GoogleDrive](https://drive.google.com/drive/folders/1MTZMFmaX1vPM8WShD6lPzrdghvcl1FAi?usp=sharing)
+7. Download pretrained models from our model ([GoogleDrive](https://drive.google.com/drive/folders/1MTZMFmaX1vPM8WShD6lPzrdghvcl1FAi?usp=sharing))
    ```
    ${POSE_ROOT}
     `-- models
